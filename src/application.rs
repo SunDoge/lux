@@ -31,5 +31,10 @@ impl<T: Context + Send> Application<T> {
         }
     }
 
+    pub fn use_middleware(&mut self, middleware: Middleware<T>) -> &mut Self {
+        self.middleware.push(middleware);
+        self
+    }
+
     pub fn listen(&self) {}
 }
