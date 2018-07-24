@@ -14,9 +14,9 @@ use radix_router::router::BoxFut;
 use std::sync::Arc;
 
 fn m1(ctx: BasicContext, m: &MiddlewareChain<BasicContext>) -> BoxFut {
-    println!("Before");
+    // println!("Before");
     Box::new(m.next(ctx).and_then(|res| {
-        println!("After");
+        // println!("After");
         future::ok(res)
     }))
 }
@@ -29,6 +29,8 @@ type Handler = fn(BasicContext, &MiddlewareChain<BasicContext>) -> BoxFut;
 
 fn main() {
     let mut app = Application::<BasicContext>::new();
-    app.stack = Arc::new(vec![Box::new(m1 as Handler), Box::new(m2 as Handler)]);
+    // app.stack = Arc::new(vec![Box::new(m1 as Handler), Box::new(m2 as Handler)]);
+    app.use_middleware(Box::new(m1));
+    app.use_middleware(Box::new(m2));
     Application::listen(app);
 }

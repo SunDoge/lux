@@ -16,13 +16,16 @@ where
     }
 }
 
-pub struct MiddlewareChain<T> {
-    pub middleware: Arc<Vec<Box<Middleware<T> + Send + Sync>>>,
+pub struct MiddlewareChain<'a, T: 'a> {
+    // pub middleware: Arc<Vec<Box<Middleware<T> + Send + Sync>>>,
+    pub middleware: &'a Vec<Box<Middleware<T> + Send + Sync>>,
 }
 
-impl<T: Context> MiddlewareChain<T> {
+impl<'a, T: Context> MiddlewareChain<'a, T> {
     pub fn next(&self, mut context: T) -> BoxFut {
         let next_middleware = self.middleware.get(context.index()).unwrap();
         next_middleware.handle(context, self)
     }
 }
+
+
