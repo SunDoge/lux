@@ -1,14 +1,17 @@
 use hyper::{Body, Request};
-use radix_router::router::Params;
+use middleware::MiddlewareChain;
+use radix_router::router::{Params, BoxFut};
 
 pub trait Context {
     fn index(&mut self) -> usize;
+   
 }
 
 pub struct BasicContext {
     pub request: Request<Body>,
     pub params: Params,
     pub index: usize,
+    
 }
 
 impl Context for BasicContext {
@@ -16,4 +19,6 @@ impl Context for BasicContext {
         self.index += 1;
         self.index - 1
     }
+    
+   
 }
