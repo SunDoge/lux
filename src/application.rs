@@ -2,9 +2,11 @@ use context::{BasicContext, Context};
 use hyper::{Body, Request, Server};
 use middleware::{Middleware, MiddlewareChain};
 use radix_router::router::{Params, Router};
+use std::sync::Arc;
 
 pub struct Application<T: 'static + Send> {
     pub middleware: Vec<Middleware<T>>,
+    pub stack: Arc<Vec<Middleware<T>>>,
     pub context_generator: fn(Request<Body>) -> T,
 }
 
@@ -20,6 +22,7 @@ impl<T: Context + Send> Application<T> {
     pub fn new() -> Application<BasicContext> {
         Application {
             middleware: Vec::new(),
+            stack: Arc::new(Vec::new()),
             context_generator: generate_context,
         }
     }
@@ -27,6 +30,7 @@ impl<T: Context + Send> Application<T> {
     pub fn from(generator: fn(Request<Body>) -> T) -> Application<T> {
         Application {
             middleware: Vec::new(),
+            stack: Arc::new(Vec::new()),
             context_generator: generator,
         }
     }
