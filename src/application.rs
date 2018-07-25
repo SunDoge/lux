@@ -7,10 +7,9 @@ use middleware::{Middleware, MiddlewareChain};
 use radix_router::router::{BoxFut, Params, Router};
 use std::sync::Arc;
 
-
 pub struct Application<T: 'static + Send> {
+    // pub router: Router<Vec<Box<Middleware<T> + Send + Sync>>>,
     pub middleware: Vec<Box<Middleware<T> + Send + Sync>>,
-    pub stack: Arc<Vec<Box<Middleware<T> + Send + Sync>>>,
     pub context_generator: fn(Request<Body>) -> T,
 }
 
@@ -26,7 +25,6 @@ impl<T: Context + Send> Application<T> {
     pub fn new() -> Application<BasicContext> {
         Application {
             middleware: Vec::new(),
-            stack: Arc::new(Vec::new()),
             context_generator: generate_context,
         }
     }
@@ -34,19 +32,22 @@ impl<T: Context + Send> Application<T> {
     pub fn from(generator: fn(Request<Body>) -> T) -> Application<T> {
         Application {
             middleware: Vec::new(),
-            stack: Arc::new(Vec::new()),
             context_generator: generator,
         }
     }
 
-    pub fn use_middleware(&mut self, middleware: Box<Middleware<T> + Send + Sync>) -> &mut Self {
-        self.middleware.push(middleware);
+    pub fn use_middleware(&mut self, middleware: impl Middleware<T> + Send + Sync + 'static) -> &mut Self {
+        self.middleware.push(Box::new(middleware));
         self
     }
 
-    pub fn listen(app: Application<T>) {
-        let addr = ([127, 0, 0, 1], 3000).into();
+    // pub fn handle(&mut self, method: &str, path: &str, m: Vec<Box<Middleware<T> + Send + Sync>>) {
+    //     self.router.handle(method, path, m);
+    // }
 
+    pub fn run(app: Application<T>, addr: &str) {
+        // let addr = ([127, 0, 0, 1], 3000).into();
+    
         let arc_app = Arc::new(app);
         // new_service is run for each connection, creating a 'service'
         // to handle requests for that specific connection.
@@ -70,7 +71,7 @@ impl<T: Context + Send> Application<T> {
             })
         };
 
-        let server = Server::bind(&addr)
+        let server = Server::bind(&addr.parse().unwrap())
             .serve(new_service)
             .map_err(|e| eprintln!("server error: {}", e));
 
