@@ -28,18 +28,25 @@ fn m2(ctx: BasicContext, m: &MiddlewareChain<BasicContext>) -> BoxFut {
     )))))
 }
 
+fn m3(ctx: BasicContext, m: &MiddlewareChain<BasicContext>) -> BoxFut {
+    Box::new(future::ok(Response::new(Body::from("hello"))))
+}
+
 type Handler = fn(BasicContext, &MiddlewareChain<BasicContext>) -> BoxFut;
 
 fn main() {
     let mut app = Application::<BasicContext>::new();
     // app.stack = Arc::new(vec![Box::new(m1 as Handler), Box::new(m2 as Handler)]);
     app.use_middleware(m1);
-    app.use_middleware(
-        |mut ctx: BasicContext, m: &MiddlewareChain<BasicContext>| -> BoxFut {
-            ctx.params = Params(vec![Param::new("key", "value")]);
-            m.next(ctx)
-        },
-    );
-    app.use_middleware(m2);
+    // app.use_middleware(
+    //     |mut ctx: BasicContext, m: &MiddlewareChain<BasicContext>| -> BoxFut {
+    //         ctx.params = Params(vec![Param::new("key", "value")]);
+    //         m.next(ctx)
+    //     },
+    // );
+    // app.use_middleware(m2);
+    app.handle("GET", "/", vec![Box::new(m3)]);
+    app.handle("GET", "/to/:key", vec![Box::new(m2)]);
+    app.use_router();
     Application::run(app, "127.0.0.1:3000");
 }
