@@ -1,15 +1,15 @@
 extern crate env_logger;
 extern crate futures;
 extern crate hyper;
-extern crate koa_rs;
+extern crate lux;
 extern crate radix_router;
 
 use futures::future;
 use hyper::rt::Future;
 use hyper::{Body, Response};
-use koa_rs::application::Application;
-use koa_rs::context::BasicContext;
-use koa_rs::middleware::MiddlewareChain;
+use lux::application::Application;
+use lux::context::BasicContext;
+use lux::middleware::MiddlewareChain;
 use radix_router::router::{BoxFut, Param, Params};
 use std::sync::Arc;
 
