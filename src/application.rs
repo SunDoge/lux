@@ -35,8 +35,8 @@ impl<T: Context> Middleware<T> for Router<Vec<Box<Middleware<T> + Send + Sync>>>
                     301
                 };
 
-                // if tsr && self.redirect_trailing_slash {
-                if tsr && true {
+                if tsr && self.redirect_trailing_slash {
+                    // if tsr && true {
                     let path = if context.request().uri().path().len() > 1
                         && context.request().uri().path().ends_with("/")
                     {
@@ -56,8 +56,8 @@ impl<T: Context> Middleware<T> for Router<Vec<Box<Middleware<T> + Send + Sync>>>
                     return Box::new(future::ok(response));
                 }
 
-                // if self.redirect_fixed_path {
-                if true {
+                if self.redirect_fixed_path {
+                    // if true {
                     let (fixed_path, found) = root.find_case_insensitive_path(
                         &clean_path(context.request().uri().path()),
                         // self.redirect_trailing_slash,
@@ -78,8 +78,8 @@ impl<T: Context> Middleware<T> for Router<Vec<Box<Middleware<T> + Send + Sync>>>
             }
         }
 
-        // if context.request().method() == &Method::OPTIONS && self.handle_options {
-        if context.request().method() == &Method::OPTIONS && true {
+        if context.request().method() == &Method::OPTIONS && self.handle_options {
+            // if context.request().method() == &Method::OPTIONS && true {
             let allow = self.allowed(
                 context.request().uri().path(),
                 context.request().method().as_str(),
@@ -93,8 +93,8 @@ impl<T: Context> Middleware<T> for Router<Vec<Box<Middleware<T> + Send + Sync>>>
                 return Box::new(future::ok(response));
             }
         } else {
-            // if self.handle_method_not_allowed {
-            if true {
+            if self.handle_method_not_allowed {
+                // if true {
                 let allow = self.allowed(
                     context.request().uri().path(),
                     context.request().method().as_str(),
@@ -119,16 +119,22 @@ impl<T: Context> Middleware<T> for Router<Vec<Box<Middleware<T> + Send + Sync>>>
         }
 
         // Handle 404
-        // if let Some(ref not_found) = self.not_found {
-        //     return not_found.handle(req, Params::new());
-        // } else {
-        // *response.status_mut() = StatusCode::NOT_FOUND;
-        let response = Response::builder()
-            .status(404)
-            .body("NOT_FOUND".into())
-            .unwrap();
-        return Box::new(future::ok(response));
-        // }
+        if let Some(ref not_found) = self.not_found {
+            // return not_found.next(req, Params::new());
+            let m = MiddlewareChain {
+                    // middleware: cloned_app.stack.clone(),
+                    middleware: not_found, // middleware: &ref_app.middleware
+                };
+            context.reset();
+            return m.next(context);
+        } else {
+            // *response.status_mut() = StatusCode::NOT_FOUND;
+            let response = Response::builder()
+                .status(404)
+                .body("NOT_FOUND".into())
+                .unwrap();
+            return Box::new(future::ok(response));
+        }
     }
 }
 
@@ -167,7 +173,12 @@ impl<T: Context + Send> Application<T> {
         }
     }
 
-    pub fn handle(&mut self, method: &'static str, path: &'static str, m: Vec<Box<Middleware<T> + Send + Sync>>) {
+    pub fn handle(
+        &mut self,
+        method: &'static str,
+        path: &'static str,
+        m: Vec<Box<Middleware<T> + Send + Sync>>,
+    ) {
         self.router.push((method, path, m));
     }
 
